@@ -42,21 +42,25 @@ void mouse_handler_c() {
                 mousePacket[2] = data;
                 mouseCycle = 0;
 
-                int rel_x = mousePacket[1];
-                int rel_y = mousePacket[2];
+                // Rzutujemy bajty bezpośrednio na signed char (int8_t),
+                // dzięki czemu kompilator sam zadba o bity znaku (wartości ujemne)
+                int8_t rel_x = (int8_t)mousePacket[1];
+                int8_t rel_y = (int8_t)mousePacket[2];
 
-                if (mousePacket[0] & 0x10) rel_x |= 0xFFFFFF00;
-                if (mousePacket[0] & 0x20) rel_y |= 0xFFFFFF00;
+                // Standardowy protokół PS/2:
+                // rel_x: dodatnie w prawo, ujemne w lewo
+                // rel_y: dodatnie w GÓRĘ, ujemne w DÓŁ
 
                 mouseX += rel_x;
-            mouseY += rel_y;
+                mouseY -= rel_y; // ODWRACAMY oś Y, bo na ekranie VESA dół to wartości większe!
 
-            if (mouseX < -halfX) mouseX = -halfX;
-            if (mouseX > halfX - MOUSE_SIZE_W) mouseX = halfX - MOUSE_SIZE_W;
-            if (mouseY > halfY) mouseY = halfY;
-            if (mouseY < -halfY + MOUSE_SIZE_H) mouseY = -halfY + MOUSE_SIZE_H;
+                // Restrykcyjne pilnowanie granic ekranu (dla Twojego układu od -half do +half)
+                if (mouseX < -halfX) mouseX = -halfX;
+                if (mouseX > halfX - MOUSE_SIZE_W) mouseX = halfX - MOUSE_SIZE_W;
+                if (mouseY > halfY) mouseY = halfY;
+                if (mouseY < -halfY + MOUSE_SIZE_H) mouseY = -halfY + MOUSE_SIZE_H;
 
-            mouseUpdated = 1;
+                mouseUpdated = 1;
             break;
         }
     }
