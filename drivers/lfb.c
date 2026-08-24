@@ -14,14 +14,14 @@ static uint32 _width = 0, _height = 0, _pitch = 0, _bpp = 0, *_addr = 0;;
 
 void initLFB(const uint32 address) {
 	struct multiboot_tag *tag;
-	for (tag = (struct multiboot_tag *) (uintptr_t) (address + 8); tag->type != 0; tag = (struct multiboot_tag *) ((uint8_t *) tag + ((tag->size + 7) & ~7))) {
+	for (tag = (struct multiboot_tag *) (uiptr) (address + 8); tag->type != 0; tag = (struct multiboot_tag *) ((uint8 *) tag + ((tag->size + 7) & ~7))) {
 		if (tag->type == 8) {
 			struct multiboot_tag_framebuffer *fb = (struct multiboot_tag_framebuffer *) tag;
 			_width = fb->framebuffer_width;
 			_height = fb->framebuffer_height;
 			_pitch = fb->framebuffer_pitch;
 			_bpp = fb->framebuffer_bpp;
-			_addr = (uint32_t *) (uintptr_t) fb->framebuffer_addr;
+			_addr = (uint32 *) (uiptr) fb->framebuffer_addr;
 			break;
 		}
 	}
@@ -34,21 +34,30 @@ void initLFB(const uint32 address) {
 		freeze();
 	}
 }
-void putPx(const uint32_t x, const uint32_t y, const uint32_t color) {
-	if (x >= _width || y >= _height) return;
-	*(uint32_t *)((uint8_t *)_addr + y * _pitch + (x << 2)) = color;
+void scrollUp() {
+	for (uint32 y = 0; y < _height - 1; y++) {
+		uint32 *dest_row = (uint32 *)((uint8 *)_addr + y * _pitch), *src_row  = (uint32 *)((uint8 *)_addr + (y + 1) * _pitch);
+		for (uint32 x = 0; x < _width; x++) dest_row[x] = src_row[x];
+	}
+	uint32 *last_row = (uint32 *)((uint8 *)_addr + (_height - 1) * _pitch);
+	for (uint32 x = 0; x < _width; x++) last_row[x] = 0;
 }
-void drawRect(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height, const uint32_t color) {
+void scrollUpN(uint32 n) { for (uint32 i = 0; i < n; i++) scrollUp(); }
+void putPx(const uint32 x, const uint32 y, const uint32 color) {
+	if (x >= _width || y >= _height) return;
+	*(uint32 *)((uint8 *)_addr + y * _pitch + (x << 2)) = color;
+}
+void drawRect(const uint32 x, const uint32 y, const uint32 width, const uint32 height, const uint32 color) {
 	if (x + width > _width || y + height > _height) return;
-	for (uint32_t row = 0; row < height; row++) {
-		uint32_t *pixel = (uint32_t *)((uint8_t *)_addr + (y + row) * _pitch) + x;
-		for (uint32_t col = 0; col < width; col++) pixel[col] = color;
+	for (uint32 row = 0; row < height; row++) {
+		uint32 *pixel = (uint32 *)((uint8_t *)_addr + (y + row) * _pitch) + x;
+		for (uint32 col = 0; col < width; col++) pixel[col] = color;
 	}
 }
-void lfbClear(const uint32_t color) {
-	const uint32_t total_pixels = _width * _height;
+void lfbClear(const uint32 color) {
+	const uint32 total_pixels = _width * _height;
 	if (_pitch == _width * 4) {
-		uint32_t *dest = _addr;
-		for (uint32_t i = 0; i < total_pixels; i++) dest[i] = color;
+		uint32 *dest = _addr;
+		for (uint32 i = 0; i < total_pixels; i++) dest[i] = color;
 	} else drawRect(0, 0, _width, _height, color);
 }

@@ -4,8 +4,10 @@
 #include "../utility/types.h"
 
 void initLFB(const uint32 addr);
-void putPx(const uint32_t x, const uint32_t y, const uint32_t color);
-void drawRect(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height, const uint32_t color);
-void lfbClear(const uint32_t color);
+void scrollUp();
+void scrollUpN(uint32 n);
+void putPx(const uint32 x, const uint32 y, const uint32 color);
+void drawRect(const uint32 x, const uint32 y, const uint32 width, const uint32 height, const uint32 color);
+void lfbClear(const uint32 color);
 
 #endif

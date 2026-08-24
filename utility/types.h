@@ -16,4 +16,8 @@ typedef uint8_t uint8;
 typedef size_t vsize;
 typedef uintptr_t uiptr;
 
+typedef uint8 state;
+#define false 0
+#define true 1
+
 #endif
