@@ -4,12 +4,12 @@ ASM = nasm
 BIN_DIR = .bin
 OBJ_DIR = .obj
 ISO_DIR = iso
-ISO     = quneos.iso
+ISO     = qunetra.iso
 KERNEL  = $(BIN_DIR)/kernel.bin
 
 CFLAGS   = -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -O2 -Wall -Wextra -I. -Iinclude
 ASMFLAGS = -f elf32
-LDFLAGS  = -m32 -nostdlib -no-pie -T linker.ld
+LDFLAGS  = -m32 -nostdlib -no-pie -T boot/linker.ld
 
 rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
@@ -23,7 +23,7 @@ OBJECTS = $(OBJ_ASM) $(OBJ_C)
 all: $(BIN_DIR)/$(ISO)
 
 run: all
-	@qemu-system-i386 -cdrom $(BIN_DIR)/$(ISO) -boot d
+	@qemu-system-i386 -cdrom $(BIN_DIR)/$(ISO) -boot d -device VGA,xres=1280,yres=720 -display gtk,zoom-to-fit=off
 
 $(BIN_DIR)/$(ISO): $(KERNEL) grub.cfg
 	@mkdir -p $(ISO_DIR)/boot/grub
