@@ -1,44 +1,57 @@
-CC = gcc
-CFLAGS = -m32 -ffreestanding -fno-pie -fno-stack-protector -nostdlib -O2 -Wall -Wextra \
-         -mno-sse -mno-sse2 -mno-mmx -mno-80387 -mpreferred-stack-boundary=2
-NASM = nasm
-LD = ld
+CC  = gcc
+ASM = nasm
 
-BUILD_DIR = bin
-OBJ_DIR = $(BUILD_DIR)/objs
+BIN_DIR = .bin
+OBJ_DIR = .obj
+ISO_DIR = iso
+ISO     = quneos.iso
+KERNEL  = $(BIN_DIR)/kernel.bin
 
-C_SOURCES = $(wildcard drivers/*.c kernel/*.c cpu/*.c)
-C_OBJS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(C_SOURCES))
+CFLAGS   = -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -O2 -Wall -Wextra -I. -Iinclude
+ASMFLAGS = -f elf32
+LDFLAGS  = -m32 -nostdlib -no-pie -T linker.ld
 
-KERNEL_ENTRY_OBJ = $(OBJ_DIR)/boot/kernel_entry.o
+rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
-all: $(BUILD_DIR)/os-image.bin
+C_SRCS   = $(call rwildcard,.,*.c)
+ASM_SRCS = $(call rwildcard,.,*.asm)
 
-$(BUILD_DIR) $(OBJ_DIR):
-	mkdir -p $@
+OBJ_C   = $(patsubst ./%.c, $(OBJ_DIR)/%.o, $(C_SRCS))
+OBJ_ASM = $(patsubst ./%.asm, $(OBJ_DIR)/%_asm.o, $(ASM_SRCS))
+OBJECTS = $(OBJ_ASM) $(OBJ_C)
 
-$(BUILD_DIR)/boot.bin: boot/boot.asm | $(BUILD_DIR)
-	$(NASM) -f bin $< -o $@
+all: $(BIN_DIR)/$(ISO)
 
-$(KERNEL_ENTRY_OBJ): boot/kernel_entry.asm | $(BUILD_DIR)
-	mkdir -p $(dir $@)
-	$(NASM) -f elf32 $< -o $@
+run: all
+	@qemu-system-i386 -cdrom $(BIN_DIR)/$(ISO) -boot d
 
-$(OBJ_DIR)/%.o: %.c | $(BUILD_DIR)
-	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BIN_DIR)/$(ISO): $(KERNEL) grub.cfg
+	@mkdir -p $(ISO_DIR)/boot/grub
+	@cp $(KERNEL) $(ISO_DIR)/boot/kernel.bin
+	@cp grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
+	@grub-mkrescue -o $@ $(ISO_DIR) >/dev/null 2>&1
+	@rm -rf $(ISO_DIR)
+	@printf "\033[1;38;5;34mISO is ready: %s\n" "$@"
 
-$(BUILD_DIR)/kernel.bin: $(KERNEL_ENTRY_OBJ) $(C_OBJS) | $(BUILD_DIR)
-	$(LD) -m elf_i386 -T linker.ld -o $@ --oformat binary $^
+$(KERNEL): $(OBJECTS) | $(BIN_DIR)
+	@echo "Linking Kernel..."
+	@$(CC) $(LDFLAGS) -o $@ $(OBJECTS)
 
-$(BUILD_DIR)/os-image.bin: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin | $(BUILD_DIR)
-	cat $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin > $@
-	truncate -s 65536 $@
+$(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
+	@mkdir -p $(dir $@)
+	@echo "CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
 
-run: $(BUILD_DIR)/os-image.bin
-	qemu-system-i386 -vga std -usb -device -drive format=raw,file=$(BUILD_DIR)/os-image.bin
+$(OBJ_DIR)/%_asm.o: %.asm | $(OBJ_DIR)
+	@mkdir -p $(dir $@)
+	@echo "ASM $<"
+	@$(ASM) $(ASMFLAGS) $< -o $@
+
+$(BIN_DIR) $(OBJ_DIR):
+	@mkdir -p $@
 
 clean:
-	rm -rf $(BUILD_DIR)
+	@rm -rf $(OBJ_DIR) $(BIN_DIR) $(ISO_DIR) *.iso
+	@echo "Cleaned!"
 
 .PHONY: all run clean
