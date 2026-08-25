@@ -7,7 +7,7 @@ ISO_DIR = iso
 ISO     = qunetra.iso
 KERNEL  = $(BIN_DIR)/kernel.bin
 
-CFLAGS   = -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -O2 -Wall -Wextra -I. -Iinclude
+CFLAGS   = -std=gnu99 -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -O2 -Wall -Wextra -I. -Iinclude
 ASMFLAGS = -f elf32
 LDFLAGS  = -m32 -nostdlib -no-pie -T boot/linker.ld
 

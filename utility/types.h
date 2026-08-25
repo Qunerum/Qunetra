@@ -20,4 +20,6 @@ typedef uint8 state;
 #define false 0
 #define true 1
 
+typedef unsigned int uint;
+
 #endif

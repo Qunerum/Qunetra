@@ -12,7 +12,7 @@ struct multiboot_tag_framebuffer {
 
 static uint32 _width = 0, _height = 0, _pitch = 0, _bpp = 0, *_addr = 0;;
 
-void initLFB(const uint32 address) {
+state initLFB(const uint32 address) {
 	struct multiboot_tag *tag;
 	for (tag = (struct multiboot_tag *) (uiptr) (address + 8); tag->type != 0; tag = (struct multiboot_tag *) ((uint8 *) tag + ((tag->size + 7) & ~7))) {
 		if (tag->type == 8) {
@@ -33,6 +33,7 @@ void initLFB(const uint32 address) {
 		vga("ERROR: BPP mode not supported! Expected 32 bit.");
 		freeze();
 	}
+	return true;
 }
 void scrollUp() {
 	for (uint32 y = 0; y < _height - 1; y++) {
@@ -54,7 +55,7 @@ void drawRect(const uint32 x, const uint32 y, const uint32 width, const uint32 h
 		for (uint32 col = 0; col < width; col++) pixel[col] = color;
 	}
 }
-void lfbClear(const uint32 color) {
+void lfbFill(const uint32 color) {
 	const uint32 total_pixels = _width * _height;
 	if (_pitch == _width * 4) {
 		uint32 *dest = _addr;
