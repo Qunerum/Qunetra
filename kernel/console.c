@@ -70,13 +70,23 @@ static const uint32 palette[PALETTE_MAX] = {
 	0x4D0033, 0x73004D, 0x990066, 0xBF0080, 0xE60099, 0xFF00B3, 0xFF33CC, 0xFF66E6
 };
 
-static uint32 mulPx = 2, charColor = 0xDDDDDD, cursorX = 0, cursorY = 0;
+static uint32 mulPx = 1, charColor = 0xDDDDDD, cursorX = 0, cursorY = 0;
+void setCharSize(uint32 newSize) { mulPx = newSize; }
+void setCharColor(uint8 newColor) { charColor = palette[newColor]; }
 void putChar(const char c) {
 	if (c == '\0') return;
 	if (c == ' ') { cursorX++; return; }
 	if (c == '\n') {
 		cursorX = 0;
 		cursorY++;
+		return;
+	}
+	if (c == '\b') {
+		if (cursorX == 0) {
+			if (cursorY == 0) return;
+			cursorY--;
+		} else cursorX--;
+		drawRect(cursorX * qFontX * mulPx, cursorY * qFontY * mulPx, qFontX * mulPx, qFontY * mulPx, 0);
 		return;
 	}
 	uint32 baseX = cursorX * qFontX * mulPx, baseY = cursorY * qFontY * mulPx;
@@ -127,7 +137,7 @@ static void prtFlt(double v, const uint precision) {
 		putChar('.');
 		double frac = v - (double)int_part;
 		long long mult = 1;
-		for (int i = 0; i < precision; i++) mult *= 10;
+		for (uint i = 0; i < precision; i++) mult *= 10;
 		long long frac_part = (long long)((frac * mult) + 0.5);
 		prtDec((int)frac_part);
 	}
@@ -136,6 +146,7 @@ static const char hex_chars[] = "0123456789ABCDEF";
 void kprintf(const char *format, ...) {
 	va_list args;
 	va_start(args, format);
+	charColor = palette[13];
 	for (const char *p = format; *p != '\0'; p++) {
 		if (*p != '%') {
 			putChar(*p);
@@ -201,7 +212,7 @@ void kprintf(const char *format, ...) {
 					break;
 				}
 				state started = false;
-				for (uint8 i = 31; i >= 0; i--) {
+				for (int8 i = 31; i >= 0; i--) {
 					state bit = (v >> i) & 1;
 					if (bit) started = true;
 					if (started || i == 0) putChar(bit ? '1' : '0');
@@ -220,7 +231,7 @@ void kprintf(const char *format, ...) {
 					buffer[idx++] = hex_chars[temp & 0xF];
 					temp >>= 4;
 				}
-				for (uint i = idx - 1; i >= 0; i--) putChar(buffer[i]);
+				for (int i = idx - 1; i >= 0; i--) putChar(buffer[i]);
 				break;
 			}
 			case '%': {
