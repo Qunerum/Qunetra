@@ -46,7 +46,89 @@ void strShiftLeft(char* str, const uint size, const uint shift) {
 	for (uint i = shift; i < len; i++) str[idx++] = str[i];
 	str[idx] = '\0';
 }
-// strStartWith , strEndWith , strContains , strFind , strUpper, strLower , strTrim
+state strStartWith(const char* str, const char* prefix) {
+	if (!str || !prefix) return false;
+	while (*prefix != '\0') {
+		if (*str != *prefix) return false;
+		str++;
+		prefix++;
+	}
+	return true;
+}
+state strEndWith(const char* str, const char* suffix) {
+	if (!str || !suffix) return false;
+	uint lenStr = strLen(str), lenSuff = strLen(suffix);
+	if (lenSuff > lenStr) return false;
+	const char* pStr = str + (lenStr - lenSuff);
+	return strIs(pStr, suffix);
+}
+state strContains(const char* str, const char* sub) {
+	if (!str || !sub) return false;
+	if (*sub == '\0') return true;
+	while (*str != '\0') {
+		const char *h = str, *n = sub;
+		while (*h && *n && *h == *n) {
+			h++;
+			n++;
+		}
+		if (*n == '\0') return true;
+		str++;
+	}
+	return false;
+}
+int strFind(const char* str, const char c) {
+	if (!str) return -1;
+	for (uint i = 0; str[i] != '\0'; i++) if (str[i] == c) return i;
+	return -1;
+}
+void strUpper(char* str) {
+	if (!str) return;
+	for (uint i = 0; str[i] != '\0'; i++) if (str[i] >= 'a' && str[i] <= 'z') str[i] -= 32;
+}
+void strLower(char* str) {
+	if (!str) return;
+	for (uint i = 0; str[i] != '\0'; i++) if (str[i] >= 'A' && str[i] <= 'Z') str[i] += 32;
+}
+void strTrimStartChar(char* str, const char c) {
+	if (!str) return;
+	uint i = 0;
+	while (str[i] != '\0' && str[i] == c) i++;
+	if (i == 0) return;
+	uint j = 0;
+	while (str[i + j] != '\0') {
+		str[j] = str[i + j];
+		j++;
+	}
+	str[j] = '\0';
+}
+void strTrimEndChar(char* str, const char c) {
+	if (!str) return;
+	uint len = strLen(str);
+	while (len > 0 && str[len - 1] == c) len--;
+	str[len] = '\0';
+}
+void strTrimStart(char* str) {
+	if (!str) return;
+	uint i = 0;
+	while (str[i] != '\0' && (str[i] == ' ' || str[i] == '\n' || str[i] == '\t' || str[i] == '\r')) i++;
+	if (i == 0) return;
+	uint j = 0;
+	while (str[i + j] != '\0') {
+		str[j] = str[i + j];
+		j++;
+	}
+	str[j] = '\0';
+}
+void strTrimEnd(char* str) {
+	if (!str) return;
+	uint len = strLen(str);
+	while (len > 0 && (str[len - 1] == ' ' || str[len - 1] == '\n' || str[len - 1] == '\t' || str[len - 1] == '\r')) len--;
+	str[len] = '\0';
+}
+void strTrim(char* str) {
+	strTrimStart(str);
+	strTrimEnd(str);
+}
 
 uint stringTest() {
 	uint x = 0;
@@ -59,7 +141,25 @@ uint stringTest() {
 	x += strIs(temp, "     This is Qu");
 	strShiftLeft(temp, 16, 7);
 	x += strIs(temp, "is is Qu");
-	// x += str;
-	// x += str;
+	x += strStartWith(temp, "is is");
+	x += strEndWith(temp, "s Qu");
+	x += strContains(temp, "is Q");
+	x += strFind(temp, 'Q') == 6;
+	strUpper(temp);
+	x += strIs(temp, "IS IS QU");
+	strLower(temp);
+	x += strIs(temp, "is is qu");
+	strCopy(temp, ".. \tQunetra\n ..");
+	strTrimStartChar(temp, '.');
+	x += strIs(temp, " \tQunetra\n ..");
+	strTrimEndChar(temp, '.');
+	x += strIs(temp, " \tQunetra\n ");
+	strTrimStart(temp);
+	x += strIs(temp, "Qunetra\n ");
+	strTrimEnd(temp);
+	x += strIs(temp, "Qunetra");
+	strCopy(temp, " \t. Qunetra..\r\n");
+	strTrim(temp);
+	x += strIs(temp, ". Qunetra..");
 	return x;
 }

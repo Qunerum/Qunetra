@@ -34,7 +34,7 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 	prtState("Magic number", true);
 	prtState("LFB", lfb);
 	kprintf("%q=-= Utility =-=\n", 4);
-	prtStateNxN("string.h", stringTest(), 5);
+	prtStateNxN("string.h", stringTest(), 16);
 	putChar('\n');
 	for (uint8 y = 0; y < 16; y++) {
 		for (uint8 x = 0; x < 16; x++) { setCharColor(y * 16 + x); putChar('\x80'); }
