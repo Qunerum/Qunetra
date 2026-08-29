@@ -20,7 +20,22 @@ OBJ_C   = $(patsubst ./%.c, $(OBJ_DIR)/%.o, $(C_SRCS))
 OBJ_ASM = $(patsubst ./%.asm, $(OBJ_DIR)/%_asm.o, $(ASM_SRCS))
 OBJECTS = $(OBJ_ASM) $(OBJ_C)
 
-all: $(BIN_DIR)/$(ISO)
+define CHECK_TOOL
+	@if ! command -v $(1) >/dev/null 2>&1; then \
+		echo "\033[1;31m[ERROR] Missing required tool: '$(1)'\033[0m"; \
+		echo "Install it on your system (e.g., Ubuntu/Debian: sudo apt install $(2))"; \
+		exit 1; \
+	fi
+endef
+
+all: check-deps $(BIN_DIR)/$(ISO)
+
+check-deps:
+	$(call CHECK_TOOL,gcc,build-essential)
+	$(call CHECK_TOOL,nasm,nasm)
+	$(call CHECK_TOOL,qemu-system-i386,qemu-system-x86)
+	$(call CHECK_TOOL,grub-mkrescue,grub-pc-bin xorriso)
+	$(call CHECK_TOOL,xorriso,xorriso)
 
 run: all
 	@qemu-system-i386 -cdrom $(BIN_DIR)/$(ISO) -boot d -device VGA,xres=1280,yres=720 -display gtk,zoom-to-fit=off
@@ -54,4 +69,4 @@ clean:
 	@rm -rf $(OBJ_DIR) $(BIN_DIR) $(ISO_DIR) *.iso
 	@echo "Cleaned!"
 
-.PHONY: all run clean
+.PHONY: all run clean check-deps
