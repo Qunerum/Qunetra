@@ -71,8 +71,8 @@ static const uint32 palette[PALETTE_MAX] = {
 };
 
 static uint32 mulPx = 1, charColor = 0xDDDDDD, cursorX = 0, cursorY = 0;
-void setCharSize(uint32 newSize) { mulPx = newSize; }
-void setCharColor(uint8 newColor) { charColor = palette[newColor]; }
+void setCharSize(const uint32 newSize) { mulPx = newSize; }
+void setCharColor(const uint8 newColor) { charColor = palette[newColor]; }
 void putChar(const char c) {
 	if (c == '\0') return;
 	if (c == ' ') { cursorX++; return; }

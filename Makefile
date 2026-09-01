@@ -6,6 +6,8 @@ OBJ_DIR = .obj
 ISO_DIR = iso
 ISO     = qunetra.iso
 KERNEL  = $(BIN_DIR)/kernel.bin
+IMG     = qunetra.img
+IMG_SIZE = 16 # MiB
 
 CFLAGS   = -std=gnu99 -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -O2 -Wall -Wextra -I. -Iinclude
 ASMFLAGS = -f elf32
@@ -36,9 +38,17 @@ check-deps:
 	$(call CHECK_TOOL,qemu-system-i386,qemu-system-x86)
 	$(call CHECK_TOOL,grub-mkrescue,grub-pc-bin xorriso)
 	$(call CHECK_TOOL,xorriso,xorriso)
+	$(call CHECK_TOOL,dd,coreutils)
 
-run: all
-	@qemu-system-i386 -cdrom $(BIN_DIR)/$(ISO) -boot d -device VGA,xres=1280,yres=720 -display gtk,zoom-to-fit=off
+$(IMG):
+	@dd if=/dev/zero of=$@ bs=1M count=$(IMG_SIZE) >/dev/null 2>&1
+	@echo "New image file": $@"
+
+run: all $(IMG)
+	@qemu-system-i386 -cdrom $(BIN_DIR)/$(ISO) -boot d \
+		-device VGA,xres=1280,yres=720 -display gtk,zoom-to-fit=off \
+		-drive file=$(IMG),format=raw,if=ide,index=0,media=disk \
+		-d int,cpu_reset -D qemu.log
 
 $(BIN_DIR)/$(ISO): $(KERNEL) grub.cfg
 	@mkdir -p $(ISO_DIR)/boot/grub
