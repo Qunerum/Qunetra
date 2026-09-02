@@ -7,7 +7,7 @@ ISO_DIR = iso
 ISO     = qunetra.iso
 KERNEL  = $(BIN_DIR)/kernel.bin
 IMG     = qunetra.img
-IMG_SIZE = 16 # MiB
+IMG_SIZE = 64 # MiB
 
 CFLAGS   = -std=gnu99 -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -O2 -Wall -Wextra -I. -Iinclude
 ASMFLAGS = -f elf32

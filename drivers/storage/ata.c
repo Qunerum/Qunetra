@@ -11,7 +11,7 @@
 #define ATA_REG_DEV_SEL     (ATA_PRIMARY_IO + 6)
 #define ATA_REG_COMMAND     (ATA_PRIMARY_IO + 7)
 #define ATA_REG_STATUS      (ATA_PRIMARY_IO + 7)
-
+#define ATA_CMD_IDENTIFY    0xEC
 #define ATA_CMD_READ_PIO    0x20
 #define ATA_CMD_WRITE_PIO   0x30
 #define ATA_CMD_CACHE_FLUSH 0xE7
@@ -52,4 +52,27 @@ void ata_writeSector(const uint32 lba, const uint8 *buf) {
 	outsw(ATA_REG_DATA, buf, 256);
 	outb(ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH);
 	ata_wait(0x40, 0x40, 100000);
+}
+uint64 ata_getSectorCount(void) {
+	outb(ATA_REG_DEV_SEL, 0xE0);
+	for (uint8 i = 0; i < 4; i++) inb(ATA_REG_STATUS);
+	outb(ATA_REG_SECCOUNT, 0);
+	outb(ATA_REG_LBA_LOW, 0);
+	outb(ATA_REG_LBA_MID, 0);
+	outb(ATA_REG_LBA_HIGH, 0);
+	outb(ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
+	if (inb(ATA_REG_STATUS) == 0) return 0;
+	if (ata_wait(0x08, 0x08, 100000) != 0) return 0;
+	uint16 buf[256];
+	insw(ATA_REG_DATA, buf, 256);
+	if (buf[83] & (1 << 10)) {
+		uint64 total_sectors = ((uint64)buf[103] << 48) |
+		((uint64)buf[102] << 32) |
+		((uint64)buf[101] << 16) |
+		(uint64)buf[100];
+		return total_sectors;
+	} else {
+		uint32 total_sectors = ((uint32)buf[61] << 16) | (uint32)buf[60];
+		return (uint64)total_sectors;
+	}
 }
