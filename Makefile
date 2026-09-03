@@ -42,7 +42,7 @@ check-deps:
 
 $(IMG):
 	@dd if=/dev/zero of=$@ bs=1M count=$(IMG_SIZE) >/dev/null 2>&1
-	@echo "New image file": $@"
+	@echo "New image file: $@"
 
 run: all $(IMG)
 	@qemu-system-i386 -cdrom $(BIN_DIR)/$(ISO) -boot d \

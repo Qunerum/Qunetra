@@ -1,5 +1,7 @@
+#include "../../utility/memory.h"
 #include "../../utility/types.h"
 #include "../../utility/cpu.h"
+#include "ata.h"
 
 static uint32 pciCfgRead(const uint8 bus, const uint8 device, const uint8 function, const uint8 offset) {
 	const uint32 address = (uint32)((1 << 31) |
@@ -10,7 +12,7 @@ static uint32 pciCfgRead(const uint8 bus, const uint8 device, const uint8 functi
 	outl(0xCF8, address);
 	return inl(0xCFC);
 }
-char* getStorageType() {
+static char* getStorageType() {
 	for (uint8 bus = 0; bus < 8; bus++) {
 		for (uint8 device = 0; device < 32; device++) {
 			for (uint8 function = 0; function < 8; function++) {
@@ -21,13 +23,41 @@ char* getStorageType() {
 					subclass   = (class_reg >> 16) & 0xFF,
 					prog_if    = (class_reg >> 8) & 0xFF;
 				if (class_code == 0x01) {
-					if (subclass == 0x01) return "ATA"; // IDE / ATA
-					else if (subclass == 0x06 && prog_if == 0x01) return "AHCI"; // AHCI / SATA
+					if (subclass == 0x01) return " IDE / ATA "; // IDE / ATA
+					else if (subclass == 0x06 && prog_if == 0x01) return " AHCI / SATA "; // AHCI / SATA
 				}
 			}
 		}
 	}
-	return "NONE";
+	return " NONE ";
 }
 // 0 - 503 data
 // 504 - 511 next
+static uint8* tmpData;
+static uint64 actualSector = 0;
+static void (*sswrite)(const uint64 sector, const uint8 *buf), (*ssread)(const uint64 sector, uint8 *buf);
+
+char* initStorage() {
+	tmpData = kmalloc(512);
+	sswrite = ata_writeSector;
+	ssread = ata_readSector;
+	return getStorageType();
+}
+void closeStorage() { kfree(tmpData); }
+static void pushValue(const uint64 value, const uint8 size, const uint64 sector, uint16* byte) {
+	if (size > 8) return;
+	if (actualSector != sector) {
+		actualSector = sector;
+		ssread(actualSector, tmpData);
+	}
+	if (*byte >= 512) *byte = 0;
+	for (uint8 i = 0; i < size; i++) {
+		if (*byte + i >= 512) break;
+		const uint8 b = (uint8)(value >> (i * 8));
+		tmpData[*byte + i] = b;
+	}
+	*byte += size;
+}
+static void writeSector() {
+	sswrite(actualSector, tmpData);
+}

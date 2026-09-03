@@ -1,6 +1,7 @@
 #ifndef STORAGE_H
 #define STORAGE_H
 
-char* getStorageType();
+char* initStorage();
+void closeStorage();
 
 #endif
