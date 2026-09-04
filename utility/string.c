@@ -28,7 +28,7 @@ void strShiftRight(char* str, const uint size, const uint shift) {
 	uint len = strLen(str);
 	if (len > size - 1) len = size - 1;
 	for (int i = len; i >= 0; i--) {
-		uint new_pos = i + shift;
+		const uint new_pos = i + shift;
 		if (new_pos < size - 1) str[new_pos] = str[i];
 	}
 	for (uint i = 0; i < shift && i < size - 1; i++) str[i] = ' ';

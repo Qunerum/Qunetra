@@ -23,8 +23,8 @@ static char* getStorageType() {
 					subclass   = (class_reg >> 16) & 0xFF,
 					prog_if    = (class_reg >> 8) & 0xFF;
 				if (class_code == 0x01) {
-					if (subclass == 0x01) return " IDE / ATA "; // IDE / ATA
-					else if (subclass == 0x06 && prog_if == 0x01) return " AHCI / SATA "; // AHCI / SATA
+					if (subclass == 0x01) return " IDE / ATA ";
+					else if (subclass == 0x06 && prog_if == 0x01) return " AHCI / SATA ";
 				}
 			}
 		}
