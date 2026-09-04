@@ -31,9 +31,9 @@ static char* getStorageType() {
 	}
 	return " NONE ";
 }
-// 0 - 503 data
-// 504 - 511 next
-static uint8* tmpData;
+
+static uint8 *tmpData, *tmpMeta;
+static state sectorDirty = false;
 static uint64 actualSector = 0;
 static void (*sswrite)(const uint64 sector, const uint8 *buf), (*ssread)(const uint64 sector, uint8 *buf);
 
@@ -44,20 +44,45 @@ char* initStorage() {
 	return getStorageType();
 }
 void closeStorage() { kfree(tmpData); }
-static void pushValue(const uint64 value, const uint8 size, const uint64 sector, uint16* byte) {
+static state get_bit(const uint8 val, const uint8 bit_index) {
+	if (bit_index > 7) return 0;
+	return (val >> bit_index) & 1;
+}
+static void pushValue(const uint64 value, const uint8 size, const uint64 sector, uint16 *byte) {
+	if (size == 0 || byte == 0) return;
 	if (size > 8) return;
 	if (actualSector != sector) {
+		if (sectorDirty) {
+			sswrite(actualSector, tmpData);
+			sectorDirty = false;
+		}
 		actualSector = sector;
 		ssread(actualSector, tmpData);
 	}
 	if (*byte >= 512) *byte = 0;
 	for (uint8 i = 0; i < size; i++) {
-		if (*byte + i >= 512) break;
-		const uint8 b = (uint8)(value >> (i * 8));
-		tmpData[*byte + i] = b;
+		if (*byte + i >= 512) *byte = 0;
+		tmpData[(*byte)++] = (uint8)(value >> (i * 8));
 	}
-	*byte += size;
+	sectorDirty = true;
 }
-static void writeSector() {
-	sswrite(actualSector, tmpData);
+// = = = = = META
+// 0 - 7 last sector: 8 bytes
+// 8 - 15 sector with id's: 8 bytes
+// 16 - 23 sector with free sectors: 8 bytes
+// 24+ other data
+static void writeNewID() {
+
+}
+
+// = = = = = DATA
+// 0 - 502 data: 503 bytes
+// 503 - 511 data: 9 bytes
+// A BCDEFGHI
+// A - 76543210
+// 0 - is deleted | 1 - is start | 2 -  | 3 -  | 4 -  | 5 -  | 6 -  | 7 -
+
+void writeData(uint64 id, uint8* data, uint64* len) {
+	if (id == 0 || data == 0 || len == 0) return;
+	//
 }
