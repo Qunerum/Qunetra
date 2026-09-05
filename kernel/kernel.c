@@ -84,16 +84,13 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 	prtVal("Sectors", sectors, "");
 	prtVal("Disk memory", diskMem, memUnit);
 	kprintf("%q=-= %qUtility %q=-=\n", 4, 13, 4);
-	prtStateNxN("string.h", stringTest(), 16);
+	prtStateNxN("string.h", stringTest(), 20);
 	prtStateNxN("memory.h", memoryTest(), 3);
 	putChar('\n');
 	for (uint8 y = 0; y < 16; y++) {
 		for (uint8 x = 0; x < 16; x++) { setCharColor(y * 16 + x); putChar('\x80'); putChar('\x80'); }
 		putChar('\n');
 	}
-
-	writeData(1, 0, 0);
-
 	while (1) {
 		if (inb(0x64) & 1) {
 			const uint8 scancode = inb(0x60);

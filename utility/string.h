@@ -19,6 +19,10 @@ void strTrimEndChar(char* str, const char c);
 void strTrimStart(char* str);
 void strTrimEnd(char* str);
 void strTrim(char* str);
+void strAddChar(char* buffer, const uint size, uint *index, const char c);
+void strAddStr(char* buffer, const uint size, uint *index, const char* str);
+void strAddNum(char* buffor, const uint size,  uint* index, int value, const uint8 base);
+void strConvert(char* buf, const uint size, const char* format, ...);
 
 // X - 5
 uint stringTest();

@@ -1,4 +1,6 @@
 #include "types.h"
+#include "math.h"
+#include <stdarg.h>
 
 uint strLen(const char* str) {
 	if (!str) return 0;
@@ -129,6 +131,92 @@ void strTrim(char* str) {
 	strTrimStart(str);
 	strTrimEnd(str);
 }
+void strAddChar(char* buf, const uint size, uint *index, const char c) {
+	if (!buf || size == 0 || !index) return;
+	if (*index < size - 1) {
+		buf[(*index)++] = c;
+		buf[*index] = '\0';
+	}
+}
+void strAddStr(char *buf, const uint size, uint *index, const char* str) {
+	if (!buf || size == 0 || !index) return;
+	if (!str) str = "(null)";
+	while (*str != '\0') strAddChar(buf, size, index, *str++);
+}
+static char tmp[32];
+static const char *digits = "0123456789abcdef", *Digits = "0123456789ABCDEF";
+static state du = false;
+void strAddNum(char* buf, const uint size,  uint* index, int value, const uint8 base) {
+	if (!buf || size == 0 || !index) return;
+	if (base != 2 && base != 10 && base != 16) return;
+	if (value == 0) {
+		strAddChar(buf, size, index, '0');
+		return;
+	}
+	if (value < 0) strAddChar(buf, size, index, '-');
+	value = kabs(value);
+	uint i = 0;
+	while (value > 0) {
+		tmp[i++] = (du ? Digits : digits)[value % base];
+		value /= base;
+	}
+	while (i > 0) strAddChar(buf, size, index, tmp[--i]);
+}
+void strConvert(char* buf, const uint size, const char* format, ...) {
+	if (!buf || size == 0 || !format) return;
+	va_list args;
+	va_start(args, format);
+	uint i = 0;
+	buf[0] = '\0';
+	for (const char* p = format; *p != '\0'; p++) {
+		if (*p != '%') {
+			strAddChar(buf, size, &i, *p);
+			continue;
+		}
+		p++;
+		if (*p == '\0') break;
+		switch (*p) {
+			case 's': {
+				const char* s = va_arg(args, const char*);
+				strAddStr(buf, size, &i, s);
+				break;
+			}
+			case 'c': {
+				char v = (char)va_arg(args, int);
+				strAddChar(buf, size, &i, v);
+				break;
+			}
+			case 'd': case 'i': {
+				int v = va_arg(args, int);
+				strAddNum(buf, size, &i, v, 10);
+				break;
+			}
+			case 'u': {
+				int v = kabs(va_arg(args, int));
+				strAddNum(buf, size, &i, v, 10);
+				break;
+			}
+			case 'x': {
+				du = false;
+				int v = va_arg(args, int);
+				strAddNum(buf, size, &i, v, 16);
+				break;
+			}
+			case 'X': {
+				du = true;
+				int v = va_arg(args, int);
+				strAddNum(buf, size, &i, v, 16);
+				break;
+			}
+			case '%': { strAddChar(buf, size, &i, '%'); break; }
+			default: {
+				strAddChar(buf, size, &i, '%');
+				strAddChar(buf, size, &i, *p);
+				break;
+			}
+		}
+	}
+}
 
 uint stringTest() {
 	uint x = 0;
@@ -161,5 +249,17 @@ uint stringTest() {
 	strCopy(temp, " \t. Qunetra..\r\n");
 	strTrim(temp);
 	x += strIs(temp, ". Qunetra..");
+	uint i = 11;
+	strAddChar(temp, 16, &i, 'a');
+	x += strIs(temp, ". Qunetra..a");
+	strAddStr(temp, 16, &i, "test");
+	x += strIs(temp, ". Qunetra..ates");
+	i = 0;
+	strAddNum(temp, 16, &i, 23, 2);
+	strAddNum(temp, 16, &i, 23, 10);
+	strAddNum(temp, 16, &i, 23, 16);
+	x += strIs(temp, "101112317");
+	strConvert(temp, 16, "%s%c%d%u%x%X%%%t", "xD", 'd', 12, -5, 13, 14);
+	x += strIs(temp, "xDd125dE%%t");
 	return x;
 }
