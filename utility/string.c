@@ -1,7 +1,6 @@
 #include "types.h"
 #include "math.h"
 #include <stdarg.h>
-#include <stdio.h>
 
 uint strLen(const char* str) {
 	if (!str) return 0;
