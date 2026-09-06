@@ -10,7 +10,7 @@ struct multiboot_tag_framebuffer {
 	uint16 reserved;
 } __attribute__((packed));
 
-static uint32 _width = 0, _height = 0, _pitch = 0, _bpp = 0, *_addr = 0;;
+static uint32 _width = 0, _height = 0, _pitch = 0, _bpp = 0, *_addr = 0;
 
 state initLFB(const uint32 address) {
 	struct multiboot_tag *tag;

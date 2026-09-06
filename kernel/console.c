@@ -72,11 +72,13 @@ static const uint32 palette[PALETTE_MAX] = {
 };
 
 static uint32 mulPx = 1, charColor = 0xDDDDDD, cursorX = 0, cursorY = 0;
+static state terminalDisable = false;
+void setConsoleState(state _state) { terminalDisable = !_state; }
 void setCharSize(const uint32 newSize) { mulPx = newSize; }
 void setCharColor(const uint8 newColor) { charColor = palette[newColor]; }
 static uint8 getClrState = 0, cGetClr = 0;
 void putChar(const char c) {
-	if (c == '\0') return;
+	if (terminalDisable || c == '\0') return;
 	if (c == ' ') { cursorX++; return; }
 	if (c == '\r') { cursorX = 0; return; }
 	if (c == '\n') {
@@ -140,11 +142,12 @@ void putChar(const char c) {
 	}
 	cursorX++;
 }
-void putStr(const char *str) { while (*str != '\0') putChar(*(str++)); }
+void putStr(const char *str) { if (terminalDisable) return; while (*str != '\0') putChar(*(str++)); }
 static char tmp[65];
 static const char *digits = "0123456789abcdef", *Digits = "0123456789ABCDEF";
 static state du = false;
 void putNumber(int value, const uint8 base) {
+	if (terminalDisable) return;
 	if (base != 2 && base != 10 && base != 16) return;
 	if (value == 0) {
 		putChar('0');
@@ -161,7 +164,7 @@ void putNumber(int value, const uint8 base) {
 }
 extern void strConvertV(char* buf, const uint size, const char* format, va_list args);
 void kprintf(const char *format, ...) {
-	if (!format) return;
+	if (terminalDisable || !format) return;
 	va_list args;
 	va_start(args, format);
 	charColor = palette[13];

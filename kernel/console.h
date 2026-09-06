@@ -3,6 +3,8 @@
 
 #include "../utility/types.h"
 
+void setConsoleState(state _state);
+
 void setCharSize(uint32 newSize);
 void setCharColor(uint8 newColor);
 void putChar(char c);

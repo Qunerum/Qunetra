@@ -97,6 +97,7 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 		putChar('\n');
 	}
 
+	setConsoleState(false);
 	char t[33];
 	strConvert(t, sizeof(t), "\xff[020Hello, ");
 	kprintf("%s%qWorld!\n", t, 90);
