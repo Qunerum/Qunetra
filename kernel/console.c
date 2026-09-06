@@ -1,7 +1,8 @@
-#include <stdarg.h>
 #include "../utility/types.h"
+#include "../utility/math.h"
 #include "../drivers/lfb.h"
 #include "font.h"
+#include <stdarg.h>
 
 #define PALETTE_MAX 256
 static const uint32 palette[PALETTE_MAX] = {
@@ -73,9 +74,11 @@ static const uint32 palette[PALETTE_MAX] = {
 static uint32 mulPx = 1, charColor = 0xDDDDDD, cursorX = 0, cursorY = 0;
 void setCharSize(const uint32 newSize) { mulPx = newSize; }
 void setCharColor(const uint8 newColor) { charColor = palette[newColor]; }
+static uint8 getClrState = 0, cGetClr = 0;
 void putChar(const char c) {
 	if (c == '\0') return;
 	if (c == ' ') { cursorX++; return; }
+	if (c == '\r') { cursorX = 0; return; }
 	if (c == '\n') {
 		cursorX = 0;
 		cursorY++;
@@ -89,13 +92,42 @@ void putChar(const char c) {
 		drawRect(cursorX * qFontX * mulPx, cursorY * qFontY * mulPx, qFontX * mulPx, qFontY * mulPx, 0);
 		return;
 	}
-	uint32 baseX = cursorX * qFontX * mulPx, baseY = cursorY * qFontY * mulPx;
+	if (getClrState > 0) {
+		if (getClrState == 1) {
+			if (c == '[') {
+				getClrState = 2;
+				cGetClr = 0;
+			} else {
+				getClrState = 0;
+			}
+			return;
+		}
+		if (getClrState >= 2 && getClrState <= 4) {
+			if (c >= '0' && c <= '9') {
+				cGetClr = cGetClr * 10 + (c - '0');
+				getClrState++;
+				if (getClrState == 5) {
+					setCharColor((uint8)cGetClr);
+					getClrState = 0;
+				}
+			} else {
+				getClrState = 0;
+			}
+			return;
+		}
+	}
+
+	if (c == '\xff') {
+		getClrState = 1;
+		return;
+	}
+	const uint32 baseX = cursorX * qFontX * mulPx, baseY = cursorY * qFontY * mulPx;
 	for (uint8 ly = 0; ly < qFontY; ly++) {
-		int8 x = 0;
+		uint8 x = 0;
 		for (uint8 lx = 0; lx < qFontMax; lx++) {
 			int8 v = defaultFont[(uint8)c][ly][lx];
 			if (v == 0) break;
-			state isEnd = (v < 0);
+			const state isEnd = (v < 0);
 			if (isEnd) v = -v;
 			if (v > 10) {
 				uint8 w = v - 10;
@@ -108,141 +140,82 @@ void putChar(const char c) {
 	}
 	cursorX++;
 }
-
-static void prtDec(int v) {
-	if (v == 0) {
+void putStr(const char *str) { while (*str != '\0') putChar(*(str++)); }
+static char tmp[65];
+static const char *digits = "0123456789abcdef", *Digits = "0123456789ABCDEF";
+static state du = false;
+void putNumber(int value, const uint8 base) {
+	if (base != 2 && base != 10 && base != 16) return;
+	if (value == 0) {
 		putChar('0');
 		return;
 	}
-	if (v < 0) {
-		putChar('-');
-		v = -v;
+	if (value < 0) putChar('-');
+	value = kabs(value);
+	uint i = 0;
+	while (value > 0) {
+		tmp[i++] = (du ? Digits : digits)[value % base];
+		value /= base;
 	}
-	char buf[32];
-	int i = 0;
-	while (v > 0) {
-		buf[i++] = '0' + (v % 10);
-		v /= 10;
-	}
-	while (i > 0) putChar(buf[--i]);
+	while (i > 0) putChar(tmp[--i]);
 }
-static void prtFlt(double v, const uint precision) {
-	if (v < 0) {
-		putChar('-');
-		v = -v;
-	}
-	long long int_part = (long long)v;
-	prtDec((int)int_part);
-	if (precision > 0) {
-		putChar('.');
-		double frac = v - (double)int_part;
-		long long mult = 1;
-		for (uint i = 0; i < precision; i++) mult *= 10;
-		long long frac_part = (long long)((frac * mult) + 0.5);
-		prtDec((int)frac_part);
-	}
-}
-static const char hex_chars[] = "0123456789ABCDEF";
+extern void strConvertV(char* buf, const uint size, const char* format, va_list args);
 void kprintf(const char *format, ...) {
+	if (!format) return;
 	va_list args;
 	va_start(args, format);
 	charColor = palette[13];
-	for (const char *p = format; *p != '\0'; p++) {
+	for (const char* p = format; *p != '\0'; p++) {
 		if (*p != '%') {
 			putChar(*p);
 			continue;
 		}
 		p++;
-		uint precision = 6;
-		if (*p == '.') {
-			p++;
-			if (*p >= '0' && *p <= '9') {
-				precision = *p - '0';
-				p++;
-			}
-		}
+		if (*p == '\0') break;
 		switch (*p) {
-			case 'q': {
-				int v = va_arg(args, int);
-				if (0 <= v && v < PALETTE_MAX) charColor = palette[v];
-				break;
-			}
-			case 'm': {
-				int v = va_arg(args, int);
-				if (v) {
-					putChar('t');
-					putChar('r');
-					putChar('u');
-					putChar('e');
-				} else {
-					putChar('f');
-					putChar('a');
-					putChar('l');
-					putChar('s');
-					putChar('e');
-				}
-				break;
-			}
-
-			case 'd': {
-				int v = va_arg(args, int);
-				prtDec(v);
-				break;
-			}
 			case 's': {
-				const char *s = va_arg(args, const char *);
-				if (!s) s = "(null)";
-				while (*s) putChar(*s++);
+				const char* s = va_arg(args, const char*);
+				putStr(s);
 				break;
 			}
 			case 'c': {
-				char c = (char)va_arg(args, int);
-				putChar(c);
+				const char v = (char)va_arg(args, int);
+				putChar(v);
 				break;
 			}
-			case 'f': {
-				double v = va_arg(args, double);
-				prtFlt(v, precision);
+			case 'd': case 'i': {
+				const int v = va_arg(args, int);
+				putNumber(v, 10);
 				break;
 			}
-			case 'b': {
-				uint v = va_arg(args, uint);
-				if (v == 0) {
-					putChar('0');
-					break;
-				}
-				state started = false;
-				for (int8 i = 31; i >= 0; i--) {
-					state bit = (v >> i) & 1;
-					if (bit) started = true;
-					if (started || i == 0) putChar(bit ? '1' : '0');
-				}
+			case 'u': {
+				const int v = kabs(va_arg(args, int));
+				putNumber(v, 10);
 				break;
 			}
-			case 'h': {
-				uint v = va_arg(args, uint);
-				if (v == 0) {
-					putChar('0');
-					break;
-				}
-				char buffer[8];
-				uint idx = 0, temp = v;
-				while (temp > 0) {
-					buffer[idx++] = hex_chars[temp & 0xF];
-					temp >>= 4;
-				}
-				for (int i = idx - 1; i >= 0; i--) putChar(buffer[i]);
+			case 'x': {
+				du = false;
+				const int v = va_arg(args, int);
+				putNumber(v, 16);
 				break;
 			}
-			case '%': {
-				putChar('%');
+			case 'X': {
+				du = true;
+				const int v = va_arg(args, int);
+				putNumber(v, 16);
 				break;
 			}
-			default:
+			case 'q': {
+				const uint8 v = kclamp(va_arg(args, int), 0, 255);
+				setCharColor(v);
+				break;
+			}
+			case '%': { putChar('%'); break; }
+			default: {
 				putChar('%');
 				putChar(*p);
 				break;
+			}
 		}
 	}
-	va_end(args);
 }

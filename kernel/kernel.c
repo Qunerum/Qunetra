@@ -14,9 +14,10 @@
 static void prtState(const char* name, const state stat) {
 	uint l = strLen(name);
 	if (l >= DISTANCE) return;
-	uint s =  DISTANCE - l - 6;
+	const int s =  DISTANCE - l - 6;
+	if (0 > s) return;
 	kprintf("%q%s", 8, name);
-	for (uint i = 0; i < s; i++) putChar(' ');
+	for (int i = 0; i < s; i++) putChar(' ');
 	kprintf("%q[%q%s%q]\n", 4, stat ? 132 : 20, stat ? " OK " : "FAIL", 4);
 }
 static uint8 getNumLen(uint v) {
@@ -31,26 +32,29 @@ static uint8 getNumLen(uint v) {
 static void prtStateNxN(const char* name, const uint a, const uint b) {
 	const state stat = a == b;
 	const uint la = getNumLen(a), lb = getNumLen(b),
-	l = strLen(name), m = DISTANCE - l - la - lb - 10;
-	if (l >= m) return;
+	l = strLen(name);
+	const int s = DISTANCE - l - la - lb - 10;
+	if (0 > s) return;
 	kprintf("%q%s", 8, name);
-	for (uint i = 0; i < m; i++) putChar(' ');
+	for (int i = 0; i < s; i++) putChar(' ');
 	kprintf("%q[%q%d%q/%q%d%q] [%q%s%q]\n", 4, 8, a, 4, 8, b, 4, stat ? 132 : 20, stat ? " OK " : "FAIL", 4);
 }
 static void prtCustom(const char* name, const char* custom) {
 	const uint l = strLen(name), la = strLen(custom);
 	if (l >= DISTANCE) return;
-	const uint s =  DISTANCE - l - la - 2;
+	const int s =  DISTANCE - l - la - 2;
+	if (0 > s) return;
 	kprintf("%q%s", 8, name);
-	for (uint i = 0; i < s; i++) putChar(' ');
+	for (int i = 0; i < s; i++) putChar(' ');
 	kprintf("%q[%q%s%q]\n", 4, 8, custom, 4);
 }
 static void prtVal(const char* name, const uint v, const char* type) {
 	const uint l = strLen(name), la = getNumLen(v), lb = strLen(type);
 	if (l >= DISTANCE) return;
-	const uint s =  DISTANCE - l - la - lb - 2;
+	const int s =  DISTANCE - l - la - lb - 2;
+	if (0 > s) return;
 	kprintf("%q%s", 8, name);
-	for (uint i = 0; i < s; i++) putChar(' ');
+	for (int i = 0; i < s; i++) putChar(' ');
 	kprintf("%q[%q%d%s%q]\n", 4, 8, v, type, 4);
 }
 uint64 getHumanSize(const uint64 sectors, const char** memUnit) {
@@ -92,6 +96,11 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 		for (uint8 x = 0; x < 16; x++) { setCharColor(y * 16 + x); putChar('\x80'); putChar('\x80'); }
 		putChar('\n');
 	}
+
+	char t[33];
+	strConvert(t, sizeof(t), "\xff[020Hello, ");
+	kprintf("%s%qWorld!\n", t, 90);
+
 	while (1) {
 		if (inb(0x64) & 1) {
 			const uint8 scancode = inb(0x60);

@@ -1,6 +1,7 @@
 #include "types.h"
 #include "math.h"
 #include <stdarg.h>
+#include <stdio.h>
 
 uint strLen(const char* str) {
 	if (!str) return 0;
@@ -143,7 +144,7 @@ void strAddStr(char *buf, const uint size, uint *index, const char* str) {
 	if (!str) str = "(null)";
 	while (*str != '\0') strAddChar(buf, size, index, *str++);
 }
-static char tmp[32];
+static char tmp[65];
 static const char *digits = "0123456789abcdef", *Digits = "0123456789ABCDEF";
 static state du = false;
 void strAddNum(char* buf, const uint size,  uint* index, int value, const uint8 base) {
@@ -162,10 +163,8 @@ void strAddNum(char* buf, const uint size,  uint* index, int value, const uint8 
 	}
 	while (i > 0) strAddChar(buf, size, index, tmp[--i]);
 }
-void strConvert(char* buf, const uint size, const char* format, ...) {
+void strConvertV(char* buf, const uint size, const char* format, va_list args) {
 	if (!buf || size == 0 || !format) return;
-	va_list args;
-	va_start(args, format);
 	uint i = 0;
 	buf[0] = '\0';
 	for (const char* p = format; *p != '\0'; p++) {
@@ -182,30 +181,38 @@ void strConvert(char* buf, const uint size, const char* format, ...) {
 				break;
 			}
 			case 'c': {
-				char v = (char)va_arg(args, int);
+				const char v = (char)va_arg(args, int);
 				strAddChar(buf, size, &i, v);
 				break;
 			}
 			case 'd': case 'i': {
-				int v = va_arg(args, int);
+				const int v = va_arg(args, int);
 				strAddNum(buf, size, &i, v, 10);
 				break;
 			}
 			case 'u': {
-				int v = kabs(va_arg(args, int));
+				const int v = kabs(va_arg(args, int));
 				strAddNum(buf, size, &i, v, 10);
 				break;
 			}
 			case 'x': {
 				du = false;
-				int v = va_arg(args, int);
+				const int v = va_arg(args, int);
 				strAddNum(buf, size, &i, v, 16);
 				break;
 			}
 			case 'X': {
 				du = true;
-				int v = va_arg(args, int);
+				const int v = va_arg(args, int);
 				strAddNum(buf, size, &i, v, 16);
+				break;
+			}
+			case 'q': {
+				const uint8 v = kclamp(va_arg(args, int), 0, 255);
+				strAddStr(buf, size, &i, "\xff[");
+				if (v >= 100) strAddChar(buf, size, &i, ' ');
+				if (v >= 10) strAddChar(buf, size, &i, ' ');
+				strAddNum(buf, size, &i, v, 10);
 				break;
 			}
 			case '%': { strAddChar(buf, size, &i, '%'); break; }
@@ -216,6 +223,12 @@ void strConvert(char* buf, const uint size, const char* format, ...) {
 			}
 		}
 	}
+}
+void strConvert(char* buf, const uint size, const char* format, ...) {
+	va_list args;
+	va_start(args, format);
+	strConvertV(buf, size, format, args);
+	va_end(args);
 }
 
 uint stringTest() {
