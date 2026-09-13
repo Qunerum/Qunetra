@@ -99,9 +99,7 @@ void putChar(const char c) {
 			if (c == '[') {
 				getClrState = 2;
 				cGetClr = 0;
-			} else {
-				getClrState = 0;
-			}
+			} else getClrState = 0;
 			return;
 		}
 		if (getClrState >= 2 && getClrState <= 4) {
@@ -112,13 +110,10 @@ void putChar(const char c) {
 					setCharColor((uint8)cGetClr);
 					getClrState = 0;
 				}
-			} else {
-				getClrState = 0;
-			}
+			} else getClrState = 0;
 			return;
 		}
 	}
-
 	if (c == '\xff') {
 		getClrState = 1;
 		return;
@@ -129,7 +124,7 @@ void putChar(const char c) {
 		for (uint8 lx = 0; lx < qFontMax; lx++) {
 			int8 v = defaultFont[(uint8)c][ly][lx];
 			if (v == 0) break;
-			const state isEnd = (v < 0);
+			const state isEnd = v < 0;
 			if (isEnd) v = -v;
 			if (v > 10) {
 				uint8 w = v - 10;

@@ -70,6 +70,7 @@ uint64 getHumanSize(const uint64 sectors, const char** memUnit) {
 void closeQunetra() {
 	closeStorage();
 }
+extern uint64 fsTest();
 void kernel_main(const uint32 magic, const uint32 addr) {
 	if (magic != 0x36d76289) {
 		vga("ERROR: Bad Multiboot2 Magic Number!");
@@ -97,10 +98,12 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 		putChar('\n');
 	}
 
-	setConsoleState(false);
 	char t[33];
 	strConvert(t, sizeof(t), "\xff[020Hello, ");
 	kprintf("%s%qWorld!\n", t, 90);
+
+	char* x = "siema";
+	writeFile("test", 0, (uint8*)x, 5);
 
 	while (1) {
 		if (inb(0x64) & 1) {

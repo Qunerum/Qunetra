@@ -5,6 +5,6 @@
 
 char* initStorage();
 void closeStorage();
-void writeData(uint64 id, uint8* data, uint64* len);
+void writeFile(const char* name, const uint64 dirID, const uint8* data, const uint64 len);
 
 #endif
