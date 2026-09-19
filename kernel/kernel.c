@@ -70,7 +70,17 @@ uint64 getHumanSize(const uint64 sectors, const char** memUnit) {
 void closeQunetra() {
 	closeStorage();
 }
-extern uint64 fsTest();
+
+static const char keyboard_map[128] = {
+	0,  27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
+	'\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
+	0,   'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
+	0,  '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
+	'*',  0,  ' '
+};
+
+extern void qunetraStart();
+extern void qunetraLoop(char keyPressed);
 void kernel_main(const uint32 magic, const uint32 addr) {
 	if (magic != 0x36d76289) {
 		vga("ERROR: Bad Multiboot2 Magic Number!");
@@ -94,7 +104,11 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 	prtStateNxN("math.h", mathTest() * 2, 10);
 	putChar('\n');
 	for (uint8 y = 0; y < 16; y++) {
-		for (uint8 x = 0; x < 16; x++) { setCharColor(y * 16 + x); putChar('\x80'); putChar('\x80'); }
+		for (uint8 x = 0; x < 16; x++) {
+			setCharColor(y * 16 + x);
+			putChar('\x80');
+			putChar('\x80');
+		}
 		putChar('\n');
 	}
 
@@ -104,13 +118,17 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 
 	char* x = "siema";
 	writeFile("test", 0, (uint8*)x, 5);
-
+	qunetraStart();
 	while (1) {
+		char c = 0;
 		if (inb(0x64) & 1) {
 			const uint8 scancode = inb(0x60);
 			if (!(scancode & 0x80)) {
-				// drawRect(200, 200, 50, 50, 0x00FF00);
+				if (scancode < 128) {
+					char c = keyboard_map[scancode];
+				}
 			}
 		}
+		qunetraLoop(c);
 	}
 }

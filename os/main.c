@@ -1,0 +1,15 @@
+// #define QUNETRA_STRING
+// #define QUNETRA_MEMORY
+// #define QUNETRA_MATH
+// #define QUNETRA_CPU
+// #define QUNETRA_FS
+#include "qunetra.h" // IWYU pragma: keep
+
+// Calls functions before the loop
+void qunetraStart() {
+
+}
+// The system's main loop passes the currently pressed keyboard key
+void qunetraLoop(char keyPressed) {
+
+}
