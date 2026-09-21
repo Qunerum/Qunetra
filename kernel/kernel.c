@@ -111,23 +111,12 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 		}
 		putChar('\n');
 	}
-
-	char t[33];
-	strConvert(t, sizeof(t), "\xff[020Hello, ");
-	kprintf("%s%qWorld!\n", t, 90);
-
-	char* x = "siema";
-	writeFile("test", 0, (uint8*)x, 5);
 	qunetraStart();
 	while (1) {
 		char c = 0;
 		if (inb(0x64) & 1) {
 			const uint8 scancode = inb(0x60);
-			if (!(scancode & 0x80)) {
-				if (scancode < 128) {
-					char c = keyboard_map[scancode];
-				}
-			}
+			if (!(scancode & 0x80) && scancode < 128) c = keyboard_map[scancode];
 		}
 		qunetraLoop(c);
 	}
