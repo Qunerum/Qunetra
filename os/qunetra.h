@@ -16,7 +16,13 @@
 #ifdef QUNETRA_CPU
 #include "../utility/cpu.h"
 #endif
+#ifdef QUNETRA_BITS
+#include "../utility/bits.h"
+#endif
 #ifdef QUNETRA_FS
+#include "../drivers/storage/storage.h"
+#endif
+#ifdef QUNETRA_STORAGE
 #include "../drivers/storage/storage.h"
 #endif
 
