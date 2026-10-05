@@ -4,6 +4,8 @@
 #include "../utility/types.h"
 
 state initLFB(const uint32 addr);
+uint32 getWidth();
+uint32 getHeight();
 void scrollUp();
 void scrollUpN(uint32 n);
 void putPx(const uint32 x, const uint32 y, const uint32 color);

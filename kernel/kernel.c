@@ -86,11 +86,13 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 		vga("ERROR: Bad Multiboot2 Magic Number!");
 		return;
 	}
-	const state lfb = initLFB(addr);
+	const state lfb = initLFB(addr),
+				console = initConsole();
 	lfbFill(0);
 	kprintf("%q=-=-=-=-=-=-= %qQunetra %q=-=-=-=-=-=-=\n", 4, 13, 4);
 	prtState("Magic number", true);
 	prtState("LFB", lfb);
+	prtState("Console", console);
 	prtState("Kernel", true);
 	kprintf("%q=-= %qStorage %q=-=\n", 4, 13, 4);
 	prtCustom("Controller", initStorage());

@@ -19,6 +19,9 @@
 #ifdef QUNETRA_BITS
 #include "../utility/bits.h"
 #endif
+#ifdef QUNETRA_LFB
+#include "../drivers/lfb.h"
+#endif
 #ifdef QUNETRA_FS
 #include "../drivers/storage/storage.h"
 #endif

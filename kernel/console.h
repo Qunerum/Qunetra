@@ -3,12 +3,11 @@
 
 #include "../utility/types.h"
 
+state initConsole();
 void setConsoleState(state _state);
-
 void setCharSize(uint32 newSize);
 void setCharColor(uint8 newColor);
 void putChar(char c);
-
 void kprintf(const char *format, ...);
 
 #endif

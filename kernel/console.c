@@ -70,28 +70,37 @@ static const uint32 palette[PALETTE_MAX] = {
 	// --- 248 - 255 | Hot Pink / Neon Rose ---
 	0x4D0033, 0x73004D, 0x990066, 0xBF0080, 0xE60099, 0xFF00B3, 0xFF33CC, 0xFF66E6
 };
-
-static uint32 mulPx = 1, charColor = 0xDDDDDD, cursorX = 0, cursorY = 0;
+#define cursorBorderX 1
+#define cursorBorderY 1
+static uint32 mulPx = 1, charColor = 0xDDDDDD, cursorX = cursorBorderX, cursorY = 0;
 static state consoleDisable = false;
+state initConsole() {
+	cursorY = getHeight() - qFontY;
+	return cursorY != 0;
+}
 void setConsoleState(state _state) { consoleDisable = !_state; }
 void setCharSize(const uint32 newSize) { mulPx = newSize; }
 void setCharColor(const uint8 newColor) { charColor = palette[newColor]; }
+static void nextLine() { scrollUpN(qFontY); }
 static uint8 getClrState = 0, cGetClr = 0;
 void putChar(const char c) {
 	if (consoleDisable || c == '\0') return;
-	if (c == ' ') { cursorX++; return; }
-	if (c == '\r') { cursorX = 0; return; }
+	if (c == ' ') {
+		cursorX++;
+		return;
+	}
+	if (c == '\r') {
+		cursorX = cursorBorderX;
+		return;
+	}
 	if (c == '\n') {
-		cursorX = 0;
-		cursorY++;
+		cursorX = cursorBorderX;
+		nextLine();
 		return;
 	}
 	if (c == '\b') {
-		if (cursorX == 0) {
-			if (cursorY == 0) return;
-			cursorY--;
-		} else cursorX--;
-		drawRect(cursorX * qFontX * mulPx, cursorY * qFontY * mulPx, qFontX * mulPx, qFontY * mulPx, 0);
+		if (cursorX > cursorBorderX) cursorX--;
+		drawRect(cursorX * qFontX * mulPx, 0, qFontX * mulPx, qFontY * mulPx, 0);
 		return;
 	}
 	if (getClrState > 0) {
@@ -118,7 +127,7 @@ void putChar(const char c) {
 		getClrState = 1;
 		return;
 	}
-	const uint32 baseX = cursorX * qFontX * mulPx, baseY = cursorY * qFontY * mulPx;
+	const uint32 baseX = cursorX * qFontX * mulPx;
 	for (uint8 ly = 0; ly < qFontY; ly++) {
 		uint8 x = 0;
 		for (uint8 lx = 0; lx < qFontMax; lx++) {
@@ -128,7 +137,7 @@ void putChar(const char c) {
 			if (isEnd) v = -v;
 			if (v > 10) {
 				uint8 w = v - 10;
-				uint32 px = baseX + (x * mulPx), py = baseY + (ly * mulPx);
+				uint32 px = baseX + (x * mulPx), py = cursorY + (ly * mulPx) - (cursorBorderY * qFontY);
 				drawRect(px, py, w * mulPx, mulPx, charColor);
 				x += w;
 			} else x += v;

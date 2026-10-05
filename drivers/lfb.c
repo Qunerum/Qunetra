@@ -35,15 +35,29 @@ state initLFB(const uint32 address) {
 	}
 	return true;
 }
-void scrollUp() {
-	for (uint32 y = 0; y < _height - 1; y++) {
-		uint32 *dest_row = (uint32 *)((uint8 *)_addr + y * _pitch), *src_row  = (uint32 *)((uint8 *)_addr + (y + 1) * _pitch);
+uint32 getWidth() { return _width; }
+uint32 getHeight() { return _height; }
+void scrollUpN(uint32 n) {
+	if (!_addr || _height == 0 || _pitch == 0 || n == 0) return;
+	if (n >= _height) {
+		for (uint32 y = 0; y < _height; y++) {
+			uint32 *row = (uint32 *)((uint8 *)_addr + y * _pitch);
+			for (uint32 x = 0; x < _width; x++) row[x] = 0;
+		}
+		return;
+	}
+	const uint32 rows_to_move = _height - n;
+	for (uint32 y = 0; y < rows_to_move; y++) {
+		uint32 *dest_row = (uint32 *)((uint8 *)_addr + y * _pitch);
+		const uint32 *src_row = (const uint32 *)((uint8 *)_addr + (y + n) * _pitch);
 		for (uint32 x = 0; x < _width; x++) dest_row[x] = src_row[x];
 	}
-	uint32 *last_row = (uint32 *)((uint8 *)_addr + (_height - 1) * _pitch);
-	for (uint32 x = 0; x < _width; x++) last_row[x] = 0;
+	for (uint32 y = rows_to_move; y < _height; y++) {
+		uint32 *dest_row = (uint32 *)((uint8 *)_addr + y * _pitch);
+		for (uint32 x = 0; x < _width; x++) dest_row[x] = 0;
+	}
 }
-void scrollUpN(uint32 n) { for (uint32 i = 0; i < n; i++) scrollUp(); }
+void scrollUp() { scrollUpN(1); }
 void putPx(const uint32 x, const uint32 y, const uint32 color) {
 	if (x >= _width || y >= _height) return;
 	*(uint32 *)((uint8 *)_addr + y * _pitch + (x << 2)) = color;
