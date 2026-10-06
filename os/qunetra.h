@@ -1,32 +1,32 @@
 #ifndef QUNETRA_H
 #define QUNETRA_H
 
-#include "../utility/types.h" // IWYU pragma: keep
-#include "../kernel/console.h" // IWYU pragma: keep
+#include "../qunetra/utility/types.h" // IWYU pragma: keep
+#include "../qunetra/kernel/console.h" // IWYU pragma: keep
 
 #ifdef QUNETRA_STRING
-#include "../utility/string.h"
+#include "../qunetra/utility/string.h"
 #endif
 #ifdef QUNETRA_MEMORY
-#include "../utility/memory.h"
+#include "../qunetra/utility/memory.h"
 #endif
 #ifdef QUNETRA_MATH
-#include "../utility/math.h"
+#include "../qunetra/utility/math.h"
 #endif
 #ifdef QUNETRA_CPU
-#include "../utility/cpu.h"
+#include "../qunetra/utility/cpu.h"
 #endif
 #ifdef QUNETRA_BITS
-#include "../utility/bits.h"
+#include "../qunetra/utility/bits.h"
 #endif
 #ifdef QUNETRA_LFB
-#include "../drivers/lfb.h"
+#include "../qunetra/drivers/lfb.h"
 #endif
 #ifdef QUNETRA_FS
-#include "../drivers/storage/storage.h"
+#include "../qunetra/drivers/storage/storage.h"
 #endif
 #ifdef QUNETRA_STORAGE
-#include "../drivers/storage/storage.h"
+#include "../qunetra/drivers/storage/storage.h"
 #endif
 
 #endif

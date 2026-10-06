@@ -11,7 +11,7 @@ IMG_SIZE = 64 # MiB
 
 CFLAGS   = -std=gnu99 -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -O2 -Wall -Wextra -I. -Iinclude
 ASMFLAGS = -f elf32
-LDFLAGS  = -m32 -nostdlib -no-pie -T boot/linker.ld
+LDFLAGS  = -m32 -nostdlib -no-pie -T qunetra/boot/linker.ld
 
 rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 

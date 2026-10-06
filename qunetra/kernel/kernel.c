@@ -80,7 +80,7 @@ static const char keyboard_map[128] = {
 };
 
 extern void qunetraStart();
-extern void qunetraLoop(char keyPressed);
+extern void qunetraLoop(const char keyPressed);
 void kernel_main(const uint32 magic, const uint32 addr) {
 	if (magic != 0x36d76289) {
 		vga("ERROR: Bad Multiboot2 Magic Number!");

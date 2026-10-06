@@ -12,6 +12,6 @@ void qunetraStart() {
 	kprintf("Hello, World!\n");
 }
 // The system's main loop passes the currently pressed keyboard key
-void qunetraLoop(char keyPressed) {
+void qunetraLoop(const char keyPressed) {
 
 }
