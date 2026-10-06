@@ -67,9 +67,7 @@ uint64 getHumanSize(const uint64 sectors, const char** memUnit) {
 	return 0;
 }
 
-void closeQunetra() {
-	closeStorage();
-}
+void closeQunetra() { closeStorage(); }
 
 static const char keyboard_map[128] = {
 	0,  27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',

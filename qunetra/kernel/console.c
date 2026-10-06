@@ -100,7 +100,7 @@ void putChar(const char c) {
 	}
 	if (c == '\b') {
 		if (cursorX > cursorBorderX) cursorX--;
-		drawRect(cursorX * qFontX * mulPx, 0, qFontX * mulPx, qFontY * mulPx, 0);
+		drawRect(cursorX * qFontX * mulPx, cursorY - (cursorBorderY * qFontY), qFontX * mulPx, qFontY * mulPx, 0);
 		return;
 	}
 	if (getClrState > 0) {
