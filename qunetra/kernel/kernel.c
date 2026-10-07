@@ -9,6 +9,7 @@
 #include "../drivers/storage/storage.h"
 
 #include "console.h"
+#include "cli.h"
 
 #define DISTANCE 35
 static void prtState(const char* name, const state stat) {
@@ -38,6 +39,15 @@ static void prtStateNxN(const char* name, const uint a, const uint b) {
 	kprintf("%q%s", 8, name);
 	for (int i = 0; i < s; i++) putChar(' ');
 	kprintf("%q[%q%d%q/%q%d%q] [%q%s%q]\n", 4, 8, a, 4, 8, b, 4, stat ? 132 : 20, stat ? " OK " : "FAIL", 4);
+}
+static void prtNxN(const char* name, const uint a, const char x, const uint b) {
+	const uint la = getNumLen(a), lb = getNumLen(b),
+	l = strLen(name);
+	const int s = DISTANCE - l - la - lb - 3;
+	if (0 > s) return;
+	kprintf("%q%s", 8, name);
+	for (int i = 0; i < s; i++) putChar(' ');
+	kprintf("%q[%q%d%q%c%q%d%q]\n", 4, 8, a, 4, x, 8, b, 4);
 }
 static void prtCustom(const char* name, const char* custom) {
 	const uint l = strLen(name), la = strLen(custom);
@@ -91,6 +101,7 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 	prtState("Magic number", true);
 	prtState("LFB", lfb);
 	prtState("Console", console);
+	prtNxN("Screen resolution", getWidth(), 'x', getHeight());
 	prtState("Kernel", true);
 	kprintf("%q=-= %qStorage %q=-=\n", 4, 13, 4);
 	prtCustom("Controller", initStorage());
@@ -118,6 +129,7 @@ void kernel_main(const uint32 magic, const uint32 addr) {
 			const uint8 scancode = inb(0x60);
 			if (!(scancode & 0x80) && scancode < 128) c = keyboard_map[scancode];
 		}
+		setCharCLI(c);
 		qunetraLoop(c);
 	}
 }

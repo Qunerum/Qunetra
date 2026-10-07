@@ -78,7 +78,7 @@ state initConsole() {
 	cursorY = getHeight() - qFontY;
 	return cursorY != 0;
 }
-void setConsoleState(state _state) { consoleDisable = !_state; }
+void setConsoleState(const state _state) { consoleDisable = !_state; }
 void setCharSize(const uint32 newSize) { mulPx = newSize; }
 void setCharColor(const uint8 newColor) { charColor = palette[newColor]; }
 static void nextLine() { scrollUpN(qFontY); }
@@ -136,8 +136,8 @@ void putChar(const char c) {
 			const state isEnd = v < 0;
 			if (isEnd) v = -v;
 			if (v > 10) {
-				uint8 w = v - 10;
-				uint32 px = baseX + (x * mulPx), py = cursorY + (ly * mulPx) - (cursorBorderY * qFontY);
+				const uint8 w = v - 10;
+				const uint32 px = baseX + (x * mulPx), py = cursorY + (ly * mulPx) - (cursorBorderY * qFontY);
 				drawRect(px, py, w * mulPx, mulPx, charColor);
 				x += w;
 			} else x += v;
@@ -150,7 +150,7 @@ void putStr(const char *str) { if (consoleDisable) return; while (*str != '\0') 
 static char tmp[65];
 static const char *digits = "0123456789abcdef", *Digits = "0123456789ABCDEF";
 static state du = false;
-void putNumber(int value, const uint8 base) {
+static void putNumber(int value, const uint8 base) {
 	if (consoleDisable) return;
 	if (base != 2 && base != 10 && base != 16) return;
 	if (value == 0) {
