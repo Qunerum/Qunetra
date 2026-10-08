@@ -1,8 +1,9 @@
 #include "../utility/types.h"
 #include "console.h"
 
+#define CMD_MAX_LEN 128
 static uint16 inputLength = 0;
-static char input[1025];
+static char input[CMD_MAX_LEN + 1];
 static state CLIDisabled = false;
 void clearCLI() {
 	input[0] = '\0';
@@ -17,26 +18,29 @@ void setCLIState(const state _state) {
 }
 
 void runCmd(const char* cmd, uint cmdLen) {
+	if (inputLength == 0) return;
 	putChar('\n');
-	if (inputLength > 0) {
-		kprintf("%qUnkown command! ['%s']%q\n", 20, cmd, 13);
-		inputLength = 0;
-		input[0] = '\0';
-	}
+
+
+	kprintf("%qUnkown command! ['%s']%q\n", 20, cmd, 13);
+	inputLength = 0;
+	input[0] = '\0';
 }
 void setCharCLI(const char c) {
 	if (CLIDisabled || c == '\0') return;
 	if (c == '\n') {
-		runCmd(input, sizeof(input));
+		runCmd(input, inputLength);
 		return;
 	}
-	putChar(c);
 	if (c == '\b') {
+		putChar('\b');
 		if (inputLength > 0) inputLength--;
 		input[inputLength] = '\0';
-	} else {
-		input[inputLength] = c;
-		inputLength++;
-		input[inputLength] = '\0';
+		return;
 	}
+	if (inputLength >= CMD_MAX_LEN) return;
+	putChar(c);
+	input[inputLength] = c;
+	inputLength++;
+	input[inputLength] = '\0';
 }
